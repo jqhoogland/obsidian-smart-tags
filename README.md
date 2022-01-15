@@ -100,7 +100,7 @@ Just pull up your `tagsConfig.json`:
 {
 	...
 	"types": {
-		"types": [
+		"type": [
 			"book",
 			"movie",
 			...
