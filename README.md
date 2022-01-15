@@ -1,68 +1,125 @@
-## Obsidian Sample Plugin
+## Obsidian Smart Tags
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+This plugin introduces:
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+1. **Tag Enumerations**: Command-click tags to cycle through them (e.g., `#now`, `#later`, `#done` if you like Logseq).
+2. **Tag Aliases**: Use shorthands like `#📕` for `#book`, or `#AI` for `#Science/Formal/InformationScience/ArtificialIntelligence` (Useful if you're using your tags as [informal facets to classify your cards](https://en.wikipedia.org/wiki/Faceted_classification)).
+3. **Tag Types** (in combination with [Obsidian Dataview](https://github.com/blacksmithgu/obsidian-dataview)): use `#book` as a synonym for an inline attribute like `(type:: book)`.
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+It works well in combination with [TagFolder](https://github.com/vrtmrz/obsidian-tagfolder) and [Dataview](https://github.com/blacksmithgu/obsidian-dataview).
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### Tags enumerations
 
-### First time developing plugins?
+**Example**. I mark my tasks with `#m`, `#s`, `#c` (as in [MoSCoW prioritization](https://www.productplan.com/glossary/moscow-prioritization/)) combined with a number for extra specificity: `#m1`, `#m2`, `#m3`....
 
-Quick starting guide for new plugin devs:
+In a `tagsConfig.json`, I write the following:
 
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+```json
+{
+	...
+	"enumerations": {
+		"primary": [
+			[
+				"m1",
+				"m2",
+				"m3"
+			],
+			[
+				"s1",
+				"s2",
+				"s3"
+			],
+			[
+				"c1",
+				"c2",
+				"c3"
+			]
+		],
+		"secondary": [
+			[
+				"m1",
+				"s1",
+				"c1"
+			],
+			[
+				"m2",
+				"s2",
+				"c2"
+			],
+			[
+				"m3",
+				"s3",
+				"c3"
+			]
+		]
+	},
+	...
+}
+```
 
-### Releasing new releases
+My primary key-click combination (default: `cmd + click`) will cycle through the granular priority levels (`#m1`, `#m2`...). My secondary key-click combination (default: `ctrl + click`) will cycle through the priority categories (`#m1`, `s1`...). By default, pressing `shift` while using either of these combinations will cycle in the reverse order.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+### Tag aliases
 
-### Adding your plugin to the community plugin list
+If you're a fan of the emoji hype, you might want to be able to use the shorthand `#📕` for `#book` , `#🎬` for `#movie`. Obsidian should know these refer to the same underlying idea.
 
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+In your `tagsConfig.json`:
 
-### How to use
+```json
+{
+	...
+	"aliases": {
+		"book": [
+			"📕"
+		],
+		"movie": [
+			"🎬"
+		],
+		"science": [
+			"💭",
+			"Sciences",
+			"Science",
+			"sciences"
+		]
+	},
+	...
+}
+```
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+This uses a dictionary structure because we have to specify a "primary" key (`book`, `movie`...) for each set of aliases. Just like note aliases, tag aliases are saved with the pipe operator (`|`) as `#tag|some-alias`.
 
-### Manually installing the plugin
+### Semantic tags
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+If you're familiar with [Obsidian dataview](https://github.com/blacksmithgu/obsidian-dataview), you might prefer using more structured inline attributes like `(type:: movie)` and `(priority:: m1)` over tags. This is a really powerful feature. The only downside is that it's a bit lengthy to write out every time.
 
-### Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+An easier alternative would be to treat `#tag` as a shorthand for `(<tag-type>:: tag)`, where `<tag-type>` is inferred from a predetermined list of tags. E.g.: `#movie` for `(type:: movie)`, and `#m1` for `(priority:: m1)`. You would specify ahead of time that `type` can be one of `movie`, `book`, `article`, `essay`... and `priority` one of `m1`, `m2`, `m3`, `s1`,....
 
+Just pull up your `tagsConfig.json`:
 
-### API Documentation
+```json
+{
+	...
+	"types": {
+		"types": [
+			"book",
+			"movie",
+			...
+		],
+		"subjects": [
+			"science",
+			"social-sciences",
+			...
+		]
+	},
+	...
+}
+```
 
-See https://github.com/obsidianmd/obsidian-api
+---
+
+# Status
+
+- [ ] Tag Enumerations
+- [ ] Tag Aliases
+- [ ] Tag Typings
+- [ ] TagFolder integration
